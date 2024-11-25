@@ -41,3 +41,23 @@ jobs:
         with:
           name: Go-results-1.23.3
           path: TestResults-1.23.3.json
+  
+  deploy:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    steps:
+      - name: Execute ssh command via using private key
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.PORT }}
+          script: |
+            cd html-converter
+            git pull
+            docker build -t go_conv .
+            docker stop $(docker ps | grep main | awk {'print $1'}) 2> /dev/null
+            docker run -p 8082:8082 --restart unless-stopped -d go_conv 
+    
