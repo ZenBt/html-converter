@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: converter-deployment
+  labels:
+    app: converter
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: converter
+  template:
+    metadata:
+      labels:
+        app: converter
+    spec:
+      containers:
+      - name: converter
+        image: go_conv
+        imagePullPolicy: Never
+        ports:
+          - containerPort: 8082
+        livenessProbe:
+          httpGet:
+            path: /healthcheck
+            port: 8082
+          initialDelaySeconds: 5
+          periodSeconds: 10
